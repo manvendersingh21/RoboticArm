@@ -1,0 +1,152 @@
+<mujoco model="robotic_arm_gripper">
+  <compiler angle="radian" meshdir="assets"/>
+  
+  <option gravity="0 0 -9.81" timestep="0.001"/>
+  
+  <visual>
+    <global offwidth="1280" offheight="720"/>
+    <quality shadowsize="4096"/>
+    <map force="0.1" fogstart="3" fogend="5"/>
+  </visual>
+  
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512" 
+             rgb1=".1 .2 .3" rgb2=".2 .3 .4"/>
+    <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" 
+              reflectance=".2"/>
+    <texture name="blue" type="cube" builtin="flat" mark="cross" width="128" 
+             height="128" rgb1="0.2 0.3 0.8" rgb2="0.2 0.3 0.8"/>
+    <material name="blue" texture="blue"/>
+    <texture name="red" type="cube" builtin="flat" mark="cross" width="128" 
+             height="128" rgb1="0.8 0.2 0.2" rgb2="0.8 0.2 0.2"/>
+    <material name="red" texture="red"/>
+    <texture name="green" type="cube" builtin="flat" mark="cross" width="128" 
+             height="128" rgb1="0.2 0.8 0.2" rgb2="0.2 0.8 0.2"/>
+    <material name="green" texture="green"/>
+  </asset>
+  
+  <worldbody>
+    <light directional="true" diffuse=".8 .8 .8" specular=".2 .2 .2" 
+           pos="0 0 5" dir="0 0 -1"/>
+    <geom name="floor" type="plane" size="2 2 0.1" material="grid" condim="3"/>
+    
+    <!-- Base -->
+    <body name="base" pos="0 0 0.1">
+      <geom type="cylinder" size="0.08 0.05" rgba="0.3 0.3 0.3 1"/>
+      <inertial pos="0 0 0" mass="2" diaginertia="0.01 0.01 0.01"/>
+      
+      <!-- Link 1: Shoulder -->
+      <joint name="shoulder_pan" type="hinge" axis="0 0 1" 
+             range="-3.14 3.14" damping="1"/>
+      <geom name="link1" type="cylinder" size="0.04 0.15" 
+            pos="0 0 0.15" rgba="0.8 0.4 0.1 1"/>
+      
+      <body name="link1" pos="0 0 0.3">
+        <inertial pos="0 0 0" mass="1" diaginertia="0.005 0.005 0.005"/>
+        
+        <!-- Link 2: Elbow -->
+        <joint name="shoulder_lift" type="hinge" axis="0 1 0" 
+               range="-1.57 1.57" damping="0.8"/>
+        <geom name="link2" type="capsule" size="0.03 0.2" 
+              fromto="0 0 0 0.2 0 0" rgba="0.8 0.4 0.1 1"/>
+        
+        <body name="link2" pos="0.4 0 0">
+          <inertial pos="0 0 0" mass="0.8" diaginertia="0.003 0.003 0.003"/>
+          
+          <!-- Link 3: Wrist -->
+          <joint name="elbow" type="hinge" axis="0 1 0" 
+                 range="-1.57 1.57" damping="0.5"/>
+          <geom name="link3" type="capsule" size="0.025 0.15" 
+                fromto="0 0 0 0.15 0 0" rgba="0.8 0.4 0.1 1"/>
+          
+          <body name="wrist" pos="0.3 0 0">
+            <inertial pos="0 0 0" mass="0.3" diaginertia="0.001 0.001 0.001"/>
+            
+            <!-- Wrist rotation -->
+            <joint name="wrist_rotate" type="hinge" axis="1 0 0" 
+                   range="-3.14 3.14" damping="0.3"/>
+            <geom name="wrist" type="cylinder" size="0.02 0.03" 
+                  pos="0.03 0 0" rgba="0.3 0.3 0.3 1"/>
+            
+            <!-- Gripper base -->
+            <body name="gripper_base" pos="0.06 0 0">
+              <inertial pos="0 0 0" mass="0.2" diaginertia="0.0005 0.0005 0.0005"/>
+              <geom name="gripper_base" type="box" size="0.03 0.02 0.015" 
+                    rgba="0.2 0.2 0.2 1"/>
+              
+              <!-- Left finger -->
+              <body name="left_finger" pos="0.03 0.025 0">
+                <inertial pos="0 0 0" mass="0.05" diaginertia="0.0001 0.0001 0.0001"/>
+                <joint name="left_finger" type="slide" axis="0 1 0" 
+                       range="0 0.04" damping="0.1"/>
+                <geom name="left_finger_base" type="box" size="0.01 0.008 0.015" 
+                      pos="0 0.008 0" rgba="0.5 0.5 0.5 1"/>
+                <geom name="left_finger_tip" type="box" size="0.015 0.005 0.02" 
+                      pos="0 0.03 0" rgba="0.6 0.6 0.6 1" 
+                      friction="1.5 0.005 0.0001"/>
+              </body>
+              
+              <!-- Right finger -->
+              <body name="right_finger" pos="0.03 -0.025 0">
+                <inertial pos="0 0 0" mass="0.05" diaginertia="0.0001 0.0001 0.0001"/>
+                <joint name="right_finger" type="slide" axis="0 -1 0" 
+                       range="0 0.04" damping="0.1"/>
+                <geom name="right_finger_base" type="box" size="0.01 0.008 0.015" 
+                      pos="0 -0.008 0" rgba="0.5 0.5 0.5 1"/>
+                <geom name="right_finger_tip" type="box" size="0.015 0.005 0.02" 
+                      pos="0 -0.03 0" rgba="0.6 0.6 0.6 1"
+                      friction="1.5 0.005 0.0001"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    
+    <!-- Objects to manipulate -->
+    <body name="cube" pos="0.4 0.2 0.025">
+      <freejoint/>
+      <inertial pos="0 0 0" mass="0.1" diaginertia="0.0001 0.0001 0.0001"/>
+      <geom name="cube" type="box" size="0.025 0.025 0.025" 
+            rgba="0.8 0.2 0.2 1" friction="1.0 0.005 0.0001"/>
+    </body>
+    
+    <body name="sphere" pos="0.3 -0.2 0.02">
+      <freejoint/>
+      <inertial pos="0 0 0" mass="0.08" diaginertia="0.00008 0.00008 0.00008"/>
+      <geom name="sphere" type="sphere" size="0.02" 
+            rgba="0.2 0.8 0.2 1" friction="1.0 0.005 0.0001"/>
+    </body>
+    
+    <body name="cylinder" pos="0.5 0 0.03">
+      <freejoint/>
+      <inertial pos="0 0 0" mass="0.12" diaginertia="0.0001 0.0001 0.00005"/>
+      <geom name="cylinder" type="cylinder" size="0.02 0.03" 
+            rgba="0.2 0.2 0.8 1" friction="1.0 0.005 0.0001"/>
+    </body>
+  </worldbody>
+  
+  <actuator>
+    <!-- Position control for joints -->
+    <position name="shoulder_pan_actuator" joint="shoulder_pan" kp="100" ctrlrange="-3.14 3.14"/>
+    <position name="shoulder_lift_actuator" joint="shoulder_lift" kp="80" ctrlrange="-1.57 1.57"/>
+    <position name="elbow_actuator" joint="elbow" kp="60" ctrlrange="-1.57 1.57"/>
+    <position name="wrist_rotate_actuator" joint="wrist_rotate" kp="40" ctrlrange="-3.14 3.14"/>
+    
+    <!-- Gripper control -->
+    <position name="left_finger_actuator" joint="left_finger" kp="50" ctrlrange="0 0.04"/>
+    <position name="right_finger_actuator" joint="right_finger" kp="50" ctrlrange="0 0.04"/>
+  </actuator>
+  
+  <sensor>
+    <jointpos name="shoulder_pan_pos" joint="shoulder_pan"/>
+    <jointpos name="shoulder_lift_pos" joint="shoulder_lift"/>
+    <jointpos name="elbow_pos" joint="elbow"/>
+    <jointpos name="wrist_rotate_pos" joint="wrist_rotate"/>
+    <jointpos name="left_finger_pos" joint="left_finger"/>
+    <jointpos name="right_finger_pos" joint="right_finger"/>
+    
+    <framepos name="gripper_position" objtype="body" objname="gripper_base"/>
+    <framequat name="gripper_orientation" objtype="body" objname="gripper_base"/>
+  </sensor>
+</mujoco>
